@@ -35,15 +35,15 @@ func main() {
 	var localAddress [4]byte
 
 	//Get values from command line arguments
-	flag.StringVar(&bitcoinClientHost, "bitcoinClientHost", "example.com", "Bitcoin core host address")
-	flag.StringVar(&bitcoinClientPortString, "bitcoinClientPort", "1234", "Bitcoin core host port")
+	flag.StringVar(&bitcoinClientHost, "bitcoinClientHost", "localhost", "Bitcoin core host address")
+	flag.StringVar(&bitcoinClientPortString, "bitcoinClientPort", "8332", "Bitcoin core RPC port")
 	flag.StringVar(&bitcoinRPCUser, "bitcoinRPCUser", "rpcUserExample", "Bitcoin core RPC user")
 	flag.StringVar(&bitcoinRPCPassword, "bitcoinRPCPassword", "rpcPasswordExample", "Bitcoin core RPC password")
-	flag.StringVar(&lightningClientHost, "lightningClientHost", "example.com", "LND host address")
-	flag.StringVar(&lightningClientPortString, "lightningClientPort", "2345", "LND host port")
+	flag.StringVar(&lightningClientHost, "lightningClientHost", "localhost", "LND host address")
+	flag.StringVar(&lightningClientPortString, "lightningClientPort", "10009", "LND host port")
 	flag.StringVar(&port, "port", DefaultPort, "Port to listen for new connections to the client")
-	flag.StringVar(&macaroonPath, "macaroonPath", "~/.lnd/data/chain/bitcoin/mainnet/admin.macaroon", "Path to the macaroon used with LND for authenticate")
-	flag.StringVar(&tlsCertPath, "tlsCertPath", "~/.lnd/tls.cert", "Path to the TLS certificate used with LND for authentication")
+	flag.StringVar(&macaroonPath, "macaroonPath", path.Join(os.Getenv("HOME"), ".lnd/data/chain/bitcoin/mainnet/admin.macaroon"), "Path to the macaroon used with LND for authenticate")
+	flag.StringVar(&tlsCertPath, "tlsCertPath", path.Join(os.Getenv("HOME"), ".lnd/tls.cert"), "Path to the TLS certificate used with LND for authentication")
 	flag.StringVar(&dataPath, "dataPath", path.Join(os.Getenv("HOME"), ".lndRouting/data"), "Path to directory holding the application's data")
 	flag.Parse()
 
