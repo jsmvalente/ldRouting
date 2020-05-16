@@ -1,6 +1,19 @@
 # lndRouting
 
-The lndRouting deamon in an unstable implementation of a lightning distributed routing node. If fully conforms to the specification of the upcoming lightning distributed routing protocol and is, in the current state capable of:
+The lndRouting deamon in an unstable implementation of a lightning distributed routing node. If fully conforms to the specification of the upcoming lightning distributed routing protocol and is, in the current state, capable of:
+
+- [x] Find Routes between two public lighting nodes nodes
+- [x] Register new LDR addresses
+- [x] Share routing tables between peer nodes
+- [ ] Find Routes to and/or from private lighting nodes
+- [ ] Group routing addresses and use prefixing to work with zones
+- [ ] Virtual Private Payment Networks (VPPN), the VPN equivalent of LDR
+
+The following animation illustrates how a route is computed using the LDR protocol.
+
+![Protocol Example GIF](protocol.gif)
+
+When Alice wants to find a path to Bob she sends a routing probe through the network. With the help of the routing tables kept locally by the nodes the probe collects the correct path and its associated data, being returned to its sender when it reaches its destiny. 
 
 ## Installation
 

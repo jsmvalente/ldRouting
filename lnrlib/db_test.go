@@ -43,8 +43,8 @@ func TestSuggestAddress(t *testing.T) {
 func TestAddAddress(t *testing.T) {
 
 	var tests = [][4]byte{
-		[4]byte{0, 0, 0, 0},
-		[4]byte{0, 0, 0, 5},
+		{0, 0, 0, 0},
+		{0, 0, 0, 5},
 	}
 
 	for _, testAddress := range tests {
