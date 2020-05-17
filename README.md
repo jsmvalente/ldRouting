@@ -1,6 +1,6 @@
 # ldRouting
 
-ldRouting in an golang implementation of a lightning distributed routing node. It fully conforms to the (unreleased) specification of the lightning distributed routing protocol and is, in the current state, capable of:
+ldRouting is a golang implementation of a lightning distributed routing node. It fully conforms to the (unreleased) specification of the lightning distributed routing protocol and is, in the current state, capable of:
 
 - [x] Find Routes between two public lighting nodes
 - [x] Register new LDR addresses
@@ -67,7 +67,7 @@ bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
 bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 ```
 
-The LDR protocol uses the IP addresses announced by nodes in the lightning network to find its routes, so you for nodes to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
+The LDR protocol uses the IP addresses announced by nodes in the lightning network to connect to its peers, so to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
 After setting one of those configuration options you'll need to restart lnd to regenerate your ```tls.cert```.
 
 
@@ -108,6 +108,8 @@ So normally you could start ldRouting by doing:
 ./ldRouting -bitcoinRPCUser=MY_RPC_USER -bitcoinRPCPassword=MY_RPC_PASS
 ```
 
+**Note**: This software is still highly unstable and not ready for production, to use it you need to know what you're doing.
+
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
@@ -115,7 +117,7 @@ Please make sure to update tests as appropriate.
 
 ## Let's talk!
 
-I'm always on DM away <a href="https://twitter.com/piggydeveloper" target="_blank">`@piggydeveloper`</a>.
+I'm always one DM away <a href="https://twitter.com/piggydeveloper" target="_blank">`@piggydeveloper`</a>.
 
 If twitter is not your thing drop me an e-mail [here](mailto:joaosvalente@tecnico.ulisboa.pt?subject=[GitHub]%20Lightning%Distributed%20Routing).
 
