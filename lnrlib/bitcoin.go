@@ -15,7 +15,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
-	"github.com/jsmvalente/lndRouting/bitcoindwrapper"
+	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
 	"github.com/lightningnetwork/lnd/lnrpc"
 )
 

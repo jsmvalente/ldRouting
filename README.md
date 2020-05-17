@@ -17,13 +17,54 @@ When Alice wants to find a path to Bob she sends a routing probe through the net
 
 ## Installation
 
-At the present time it is only possible to use ldRouting using [bitcoind](https://github.com/bitcoin/bitcoin) in combination with 
+The following instalation instructions are for running ldRouting using bitcoin's testnet.
 
+ldRouting uses the combination of [bitcoind](https://github.com/bitcoin/bitcoin) and [lnd](https://github.com/lightningnetwork/lnd) as backend implementations of the bitcoin and lightning protocols.
+
+The following is an example of a ```bitcoin.conf``` file that can be used to setup bitcoind for ldRouting.
+
+```
+listen=1
+testnet=1
+txindex=1
+server=1
+zmqpubrawblock=tcp://127.0.0.1:28332
+zmqpubrawtx=tcp://127.0.0.1:28333
+rpcuser=MY_RPC_USER
+rpcpassword=MY_RPC_PASS
+
+[test]
+rpcbind=127.0.0.1
+rpcallowip=127.0.0.1
+deprecatedrpc=signrawtransaction
+```
+
+lnd can also be configured by using the following ```lnd.conf``` file.
+
+```
+[Application Options]
+tlsextraip=MY_IP_ADDRESS
+tlsextradomain=MY_DOMAIN
+
+[Bitcoin]
+bitcoin.active=true
+bitcoin.testnet=true
+bitcoin.node=bitcoind
+
+[Bitcoind]
+bitcoind.rpcuser=MY_RPC_USER
+bitcoind.rpcpass=MY_RPC_PASS
+bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
+bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
+```
+
+The LDR protocol uses the IP addresses announced by nodes in the lightning network to find its routes, so you for nodes to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
+Keep in mind that after setting one of those flags you'll need to restart lnd to regenerate your ```tls.cert```.
 
 ## Usage
 
 ```
-./lndRouting -<option>=<VALUE>
+./ldRouting -<option>=<VALUE>
 ```
 
 The available options are:
@@ -38,7 +79,7 @@ lightningClientPort=<LND host port> (default: 10009)
 macaroonPath=<Path to the macaroon used with LND for authenticate> (default: $HOME/.lnd/data/chain/bitcoin/mainnet/admin.macaroon)
 tlsCertPath=<Path to the TLS certificate used with LND for authentication> (default: $HOME/.lnd/tls.cert)
 port=<Port to listen for new connections to the routing client> (default: 8695)
-dataPath=<Path to directory holding the application's data> (default: $HOME/.lndRouting/data")
+dataPath=<Path to directory holding the application's data> (default: $HOME/.ldRouting/data")
 ```
 
 ## Contributing

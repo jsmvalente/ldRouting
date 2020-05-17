@@ -1,4 +1,4 @@
-module github.com/jsmvalente/lndRouting
+module github.com/jsmvalente/ldRouting
 
 go 1.13
 

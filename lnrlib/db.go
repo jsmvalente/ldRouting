@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/jsmvalente/lndRouting/bitcoindwrapper"
+	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
 	"github.com/lightningnetwork/lnd/lnrpc"
 )
 

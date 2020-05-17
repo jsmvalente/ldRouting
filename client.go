@@ -13,8 +13,8 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/jsmvalente/lndRouting/bitcoindwrapper"
-	. "github.com/jsmvalente/lndRouting/lnrlib"
+	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
+	. "github.com/jsmvalente/ldRouting/lnrlib"
 	"github.com/lightningnetwork/lnd/lnrpc"
 )
 
@@ -44,7 +44,7 @@ func main() {
 	flag.StringVar(&port, "port", DefaultPort, "Port to listen for new connections to the client")
 	flag.StringVar(&macaroonPath, "macaroonPath", path.Join(os.Getenv("HOME"), ".lnd/data/chain/bitcoin/mainnet/admin.macaroon"), "Path to the macaroon used with LND for authenticate")
 	flag.StringVar(&tlsCertPath, "tlsCertPath", path.Join(os.Getenv("HOME"), ".lnd/tls.cert"), "Path to the TLS certificate used with LND for authentication")
-	flag.StringVar(&dataPath, "dataPath", path.Join(os.Getenv("HOME"), ".lndRouting/data"), "Path to directory holding the application's data")
+	flag.StringVar(&dataPath, "dataPath", path.Join(os.Getenv("HOME"), ".ldRouting/data"), "Path to directory holding the application's data")
 	flag.Parse()
 
 	bitcoinClientPort, err := strconv.Atoi(bitcoinClientPortString)
