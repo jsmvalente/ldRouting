@@ -7,7 +7,7 @@ import (
 	"math/rand"
 	"net"
 
-	"github.com/lightningnetwork/lnd/lnrpc"
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 )
 
 //Route represents a payment route
@@ -27,7 +27,7 @@ func createRoute(destination [4]byte) *Route {
 }
 
 //GetRouteAuto gets a route to a destination
-func GetRouteAuto(client lnrpc.LightningClient, db *DB, destination [4]byte) (*Route, error) {
+func GetRouteAuto(client *lndwrapper.Lnd, db *DB, destination [4]byte) (*Route, error) {
 
 	route := createRoute(destination)
 
@@ -60,7 +60,7 @@ func GetRouteAuto(client lnrpc.LightningClient, db *DB, destination [4]byte) (*R
 }
 
 //GetRouteManual gets a route to a destination that is a public node
-func GetRouteManual(client lnrpc.LightningClient, db *DB, destination [4]byte, ipAddress string) (*Route, error) {
+func GetRouteManual(client *lndwrapper.Lnd, db *DB, destination [4]byte, ipAddress string) (*Route, error) {
 
 	route := createRoute(destination)
 
@@ -85,7 +85,7 @@ func GetRouteManual(client lnrpc.LightningClient, db *DB, destination [4]byte, i
 	return routeResponse, nil
 }
 
-func addHopToRoute(client lnrpc.LightningClient, db *DB, route *Route) ([4]byte, error) {
+func addHopToRoute(client *lndwrapper.Lnd, db *DB, route *Route) ([4]byte, error) {
 
 	routingEntry := db.getRoutingEntry(route.destination)
 

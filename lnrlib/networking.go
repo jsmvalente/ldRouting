@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/lightningnetwork/lnd/lnrpc"
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 )
 
 const (
@@ -28,7 +28,7 @@ type connInfo struct {
 }
 
 //ForwardRoute forwards the route to the node identificated by the LDR address
-func ForwardRoute(client lnrpc.LightningClient, db *DB, route *Route, address [4]byte) {
+func ForwardRoute(client *lndwrapper.Lnd, db *DB, route *Route, address [4]byte) {
 	log.Println("Forwarding route:")
 	PrintRoute(route)
 	connInfo := db.getPeerConn(address)
@@ -93,7 +93,7 @@ func ReceiveRouteFromDestination(db *DB, token string) *Route {
 
 //ConnectToPeersAuto - Connects to peers connects to peers automatically by trying to use
 //their lightning nodes ip addresses
-func ConnectToPeersAuto(client lnrpc.LightningClient, db *DB) {
+func ConnectToPeersAuto(client *lndwrapper.Lnd, db *DB) {
 
 	var neighborIPs []string
 	var err error
@@ -121,7 +121,7 @@ func ConnectToPeersAuto(client lnrpc.LightningClient, db *DB) {
 }
 
 //ConnectToPeer connects to a peer
-func ConnectToPeer(client lnrpc.LightningClient, db *DB, ipAddress string) error {
+func ConnectToPeer(client *lndwrapper.Lnd, db *DB, ipAddress string) error {
 	conn, err := net.Dial("tcp", ipAddress)
 	if err != nil {
 		return err
@@ -137,7 +137,7 @@ func ConnectToPeer(client lnrpc.LightningClient, db *DB, ipAddress string) error
 }
 
 //ConnectToDestinationAuto connects to a destination node using its IP
-func ConnectToDestinationAuto(client lnrpc.LightningClient, db *DB, address [4]byte, routeToken string) {
+func ConnectToDestinationAuto(client *lndwrapper.Lnd, db *DB, address [4]byte, routeToken string) {
 
 	var err error
 
@@ -160,7 +160,7 @@ func ConnectToDestinationAuto(client lnrpc.LightningClient, db *DB, address [4]b
 }
 
 //ConnectToDestination connects to a destination node using the provided IP
-func ConnectToDestination(client lnrpc.LightningClient, db *DB, address [4]byte, ipAddress string, routeToken string) error {
+func ConnectToDestination(client *lndwrapper.Lnd, db *DB, address [4]byte, ipAddress string, routeToken string) error {
 	conn, err := net.Dial("tcp", ipAddress)
 	if err != nil {
 		return err
@@ -180,7 +180,7 @@ func ConnectToDestination(client lnrpc.LightningClient, db *DB, address [4]byte,
 }
 
 //ListenForConnections listens to new nodes that want to connect and accepts them
-func ListenForConnections(lnClient lnrpc.LightningClient, port string, db *DB) {
+func ListenForConnections(lnClient *lndwrapper.Lnd, port string, db *DB) {
 	ln, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		log.Println(err)
@@ -241,7 +241,7 @@ func writeConnectionType(conn net.Conn, connType int8) {
 	}
 }
 
-func offerDestinationHandshake(conn net.Conn, client lnrpc.LightningClient, addressDB *DB) ([]byte, []byte) {
+func offerDestinationHandshake(conn net.Conn, client *lndwrapper.Lnd, addressDB *DB) ([]byte, []byte) {
 
 	//Create new RSA public key that will be used to encrypt the eoute data
 	privKey, pubKey := generateRSAKeyPair()
@@ -249,11 +249,11 @@ func offerDestinationHandshake(conn net.Conn, client lnrpc.LightningClient, addr
 	return privKey, pubKey
 }
 
-func acceptDestinationHandshake(conn net.Conn, client lnrpc.LightningClient, addressDB *DB) {
+func acceptDestinationHandshake(conn net.Conn, client *lndwrapper.Lnd, addressDB *DB) {
 
 }
 
-func offerPeerHandshake(conn net.Conn, client lnrpc.LightningClient, addressDB *DB) ([]byte, []byte, []byte, [33]byte) {
+func offerPeerHandshake(conn net.Conn, client *lndwrapper.Lnd, addressDB *DB) ([]byte, []byte, []byte, [33]byte) {
 
 	//Create new RSA public key that will be used to encrypt the
 	//simmetrical AES key
@@ -365,7 +365,7 @@ func offerPeerHandshake(conn net.Conn, client lnrpc.LightningClient, addressDB *
 
 }
 
-func acceptPeerHandshake(conn net.Conn, client lnrpc.LightningClient, db *DB) ([]byte, []byte, []byte, [33]byte) {
+func acceptPeerHandshake(conn net.Conn, client *lndwrapper.Lnd, db *DB) ([]byte, []byte, []byte, [33]byte) {
 
 	//Read the 65 byte signature sent by the peer
 	log.Println("Reading public key signature")
@@ -450,7 +450,7 @@ func acceptPeerHandshake(conn net.Conn, client lnrpc.LightningClient, db *DB) ([
 	return aesKey, baseIV, startSeq, peerLightningPubKey
 }
 
-func handlePeerConnection(conn net.Conn, lnClient lnrpc.LightningClient, db *DB, sessionKey []byte, baseIV []byte, startSeq []byte, peerPubKey [33]byte) {
+func handlePeerConnection(conn net.Conn, lnClient *lndwrapper.Lnd, db *DB, sessionKey []byte, baseIV []byte, startSeq []byte, peerPubKey [33]byte) {
 
 	var err error
 	var encryptedMessageLength uint16

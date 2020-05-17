@@ -72,15 +72,15 @@ func (b *Bitcoind) GetBlockHash(index uint64) (string, error) {
 }
 
 // SignRawTransactionWithWallet RPC sign inputs for raw transaction (serialized, hex-encoded).
-func (b *Bitcoind) SignRawTransactionWithWallet(rawTx string) (SignRawTransactionWithWalletResult, error) {
+func (b *Bitcoind) SignRawTransactionWithWallet(rawTx string) (*SignRawTransactionWithWalletResult, error) {
 	log.Println("Calling 'signrawtransactionwithwallet'")
 	r, err := b.client.call("signrawtransactionwithwallet", []string{rawTx})
 	if err = handleError(err, &r); err != nil {
-		return SignRawTransactionWithWalletResult{}, err
+		return nil, err
 	}
 
-	result := SignRawTransactionWithWalletResult{}
-	err = json.Unmarshal(r.Result, &result)
+	result := &SignRawTransactionWithWalletResult{}
+	err = json.Unmarshal(r.Result, result)
 
 	return result, err
 }
@@ -99,12 +99,12 @@ func (b *Bitcoind) SendRawTransaction(signedTx string) (string, error) {
 }
 
 // GetBlock returns information about the block with the given hash.
-func (b *Bitcoind) GetBlock(blockHash string) (GetBlockResult, error) {
+func (b *Bitcoind) GetBlock(blockHash string) (*GetBlockResult, error) {
 	r, err := b.client.call("getblock", []interface{}{blockHash, 2})
 	if err = handleError(err, &r); err != nil {
-		return GetBlockResult{}, err
+		return nil, err
 	}
-	result := GetBlockResult{}
+	result := &GetBlockResult{}
 	err = json.Unmarshal(r.Result, &result)
 
 	return result, err

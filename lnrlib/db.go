@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 	"github.com/lightningnetwork/lnd/lnrpc"
 )
 
@@ -88,7 +89,7 @@ func createDB(dbPath string) *DB {
 //m * <routingEntry>
 //<routingEntry>:
 //<destination> (4 bytes) + <hop> (4 bytes) + <capacity>  (8 bytes) + <height>  (8 bytes)
-func ReadDBFromDisk(dataPath string, lnClient lnrpc.LightningClient) *DB {
+func ReadDBFromDisk(dataPath string, lnClient *lndwrapper.Lnd) *DB {
 
 	//Create the local database
 	var addressInfoBytes = make([]byte, addressInfoSerializedSize)
@@ -706,7 +707,7 @@ func (db *DB) SaveRoutingDBToFile() {
 }
 
 //UpdateAddressDB sincronizes the address database to the tip of the blockchain
-func (db *DB) UpdateAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient) {
+func (db *DB) UpdateAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd) {
 
 	var lastScannedBlock = db.height
 	var newAddressRegistrationList []*addressRegistration
@@ -744,7 +745,7 @@ func (db *DB) UpdateAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient 
 }
 
 //SynchronizeAddressDB is to be used as a new go routine to keep updating the address db in the background
-func (db *DB) SynchronizeAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient) {
+func (db *DB) SynchronizeAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd) {
 	//Start update routine to keep the database updated
 	var lastScannedBlock = db.height
 	var newAddressRegistrationList []*addressRegistration
@@ -793,7 +794,7 @@ func (db *DB) SynchronizeAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnCl
 }
 
 //SynchronizeRoutingDB updates the routing DB according to changes in the local channel balances
-func (db *DB) SynchronizeRoutingDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient) {
+func (db *DB) SynchronizeRoutingDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd) {
 
 	var capacity int64
 	var registered bool
@@ -833,7 +834,7 @@ func (db *DB) SynchronizeRoutingDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnCl
 	}
 }
 
-func (db *DB) verifyAddressRegistration(registration *addressRegistration, lnClient lnrpc.LightningClient) (bool, *addressInfo) {
+func (db *DB) verifyAddressRegistration(registration *addressRegistration, lnClient *lndwrapper.Lnd) (bool, *addressInfo) {
 
 	sig := registration.sig[:]
 	newAddress := registration.address

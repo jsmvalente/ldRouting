@@ -1,86 +1,49 @@
 package lndrlib
 
 import (
-	"context"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"strings"
 
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 	"github.com/lightningnetwork/lnd/lnrpc"
-	"github.com/lightningnetwork/lnd/macaroons"
 	"github.com/tv42/zbase32"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
-	macaroon "gopkg.in/macaroon.v2"
 )
 
 //ConnectToLNClient connects to the local instance lnd
-func ConnectToLNClient(host string, port int, macaroonPath string, tlsCertPath string) (lnrpc.LightningClient, error) {
+func ConnectToLNClient(host string, port int, macaroonPath string, tlsCertPath string) (*lndwrapper.Lnd, error) {
 
-	tlsCreds, err := credentials.NewClientTLSFromFile(tlsCertPath, "")
+	lnd, err := lndwrapper.New(host, port, macaroonPath, tlsCertPath)
 	if err != nil {
-		fmt.Println("Cannot get node tls credentials", err)
-		return nil, err
+		log.Fatalln(err)
 	}
 
-	macaroonBytes, err := ioutil.ReadFile(macaroonPath)
-	if err != nil {
-		fmt.Println("Cannot read macaroon file", err)
-		return nil, err
-	}
-
-	mac := &macaroon.Macaroon{}
-	if err = mac.UnmarshalBinary(macaroonBytes); err != nil {
-		fmt.Println("Cannot unmarshal macaroon", err)
-		return nil, err
-	}
-
-	opts := []grpc.DialOption{
-		grpc.WithTransportCredentials(tlsCreds),
-		grpc.WithBlock(),
-		grpc.WithPerRPCCredentials(macaroons.NewMacaroonCredential(mac)),
-	}
-
-	target := fmt.Sprintf("%s:%d", host, port)
-	conn, err := grpc.Dial(target, opts...)
-	if err != nil {
-		fmt.Println("Cannot dial to lnd", err)
-		return nil, err
-	}
-
-	return lnrpc.NewLightningClient(conn), nil
+	return lnd, nil
 }
 
 //GetLocalNodePubKey returns the lightning network id of the local node string
-func GetLocalNodePubKey(client lnrpc.LightningClient) [33]byte {
+func GetLocalNodePubKey(client *lndwrapper.Lnd) [33]byte {
 
-	ctxb := context.Background()
-	req := &lnrpc.GetInfoRequest{}
-	info, err := client.GetInfo(ctxb, req)
+	nodeInfo, err := client.GetInfo()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln(err)
 	}
 
-	return PubKeyStringToArray(info.IdentityPubkey)
+	return PubKeyStringToArray(nodeInfo.IdentityPubkey)
 }
 
 //GetNodeIPs - Get the IP of a certain node
-func GetNodeIPs(client lnrpc.LightningClient, nodePubKey [33]byte) []string {
+func GetNodeIPs(client *lndwrapper.Lnd, nodePubKey [33]byte) []string {
 
 	var addrs []string
 	var i int
 	nodePubKeyHexString := PubKeyArrayToString(nodePubKey)
 
-	ctxb := context.Background()
-	req := &lnrpc.NodeInfoRequest{
-		PubKey:          nodePubKeyHexString,
-		IncludeChannels: false,
-	}
-	nodeInfo, err := client.GetNodeInfo(ctxb, req)
+	nodeInfo, err := client.GetNodeInfo(nodePubKeyHexString, false)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	for _, nodeAddress := range nodeInfo.Node.Addresses {
 		i = strings.Index(nodeAddress.Addr, ":")
 		addrs = append(addrs, nodeAddress.Addr[:i])
@@ -90,14 +53,12 @@ func GetNodeIPs(client lnrpc.LightningClient, nodePubKey [33]byte) []string {
 }
 
 //GetLocalNodeNeighboursPubKeys - Returns the pubkeys associated  of the the current node active neighbours
-func GetLocalNodeNeighboursPubKeys(client lnrpc.LightningClient) [][33]byte {
+func GetLocalNodeNeighboursPubKeys(client *lndwrapper.Lnd) [][33]byte {
 
 	neighboursPubKey := []string{}
 	neighboursArrayPubKey := [][33]byte{}
-	ctxb := context.Background()
-	req := &lnrpc.ListChannelsRequest{}
 
-	openChannels, err := client.ListChannels(ctxb, req)
+	openChannels, err := client.ListChannels()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -113,12 +74,9 @@ func GetLocalNodeNeighboursPubKeys(client lnrpc.LightningClient) [][33]byte {
 }
 
 //GetLocalChannels - Returns the channels assocatited with the local node
-func GetLocalChannels(client lnrpc.LightningClient) []*lnrpc.Channel {
+func GetLocalChannels(client *lndwrapper.Lnd) []*lnrpc.Channel {
 
-	ctxb := context.Background()
-	req := &lnrpc.ListChannelsRequest{}
-
-	openChannels, err := client.ListChannels(ctxb, req)
+	openChannels, err := client.ListChannels()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -127,19 +85,13 @@ func GetLocalChannels(client lnrpc.LightningClient) []*lnrpc.Channel {
 }
 
 //GetNodeNeighboursPubKeys - Returns the pubkeys associated  with neighbors of nodePubKey
-func GetNodeNeighboursPubKeys(client lnrpc.LightningClient, nodePubKey [33]byte) [][33]byte {
+func GetNodeNeighboursPubKeys(client *lndwrapper.Lnd, nodePubKey [33]byte) [][33]byte {
 
 	neighboursPubKey := []string{}
 	neighboursArrayPubKey := [][33]byte{}
 	nodePubKeyHexString := PubKeyArrayToString(nodePubKey)
 
-	ctxb := context.Background()
-	req := &lnrpc.NodeInfoRequest{
-		PubKey:          nodePubKeyHexString,
-		IncludeChannels: true,
-	}
-
-	nodeInfo, err := client.GetNodeInfo(ctxb, req)
+	nodeInfo, err := client.GetNodeInfo(nodePubKeyHexString, true)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -154,15 +106,10 @@ func GetNodeNeighboursPubKeys(client lnrpc.LightningClient, nodePubKey [33]byte)
 	return neighboursArrayPubKey
 }
 
-// SignMessage signs a message with this node's private key.
-//The returned 65 byte signature string is zbase32 encoded and pubkey recoverable,
-//meaning that only the message digest and signature are needed for verification.
-func SignMessage(client lnrpc.LightningClient, message []byte) []byte {
+//SignMessage signs a message using the keys provided by the lightning node
+func SignMessage(client *lndwrapper.Lnd, message []byte) []byte {
 
-	ctxb := context.Background()
-	req := &lnrpc.SignMessageRequest{Msg: message}
-
-	resp, err := client.SignMessage(ctxb, req)
+	resp, err := client.SignMessage(message)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -176,21 +123,15 @@ func SignMessage(client lnrpc.LightningClient, message []byte) []byte {
 	return signature
 }
 
-// VerifyMessage verifies a 65 byte signature over a msg.
-//The signature must be signed by an active node in the resident node's channel database.
-//In addition to returning the validity of the signature,
-//VerifyMessage also returns the recovered pubkey from the signature.
-func VerifyMessage(client lnrpc.LightningClient, message []byte, signature []byte) (bool, [33]byte) {
+//VerifyMessage verifies a message using the keys DB in the lightning node
+func VerifyMessage(client *lndwrapper.Lnd, message []byte, signature []byte) (bool, [33]byte) {
 
 	//Get the corresponding zbase32 signature
 	zbase32Signature := zbase32.EncodeToString(signature)
 
-	ctxb := context.Background()
-	req := &lnrpc.VerifyMessageRequest{Msg: message, Signature: zbase32Signature}
-
-	resp, err := client.VerifyMessage(ctxb, req)
+	resp, err := client.VerifyMessage(message, zbase32Signature)
 	if err != nil {
-		log.Fatalln(err)
+		log.Fatal(err)
 	}
 
 	return resp.Valid, PubKeyStringToArray(resp.Pubkey)

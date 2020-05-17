@@ -16,7 +16,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"github.com/btcsuite/btcutil"
 	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
-	"github.com/lightningnetwork/lnd/lnrpc"
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 )
 
 const (
@@ -72,7 +72,7 @@ func privateKeyFromAddress(bitcoind *bitcoindwrapper.Bitcoind, address string) s
 
 //BroadcastNewAddressTx broadcasts a new address regstration transaction into the blockchain
 //Note: Requires bitcoin wallet to be unlocked
-func BroadcastNewAddressTx(bitcoind *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient, address [4]byte) (string, error) {
+func BroadcastNewAddressTx(bitcoind *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, address [4]byte) (string, error) {
 
 	//TxID for the input transaction we are using
 	var unsOutTxID string
@@ -197,14 +197,14 @@ func GetBlockCount(bitcoind *bitcoindwrapper.Bitcoind) (uint64, error) {
 }
 
 //Scans the blockchain for new Lighting addresses starting from a certain block and returns them
-func getNewAddressRegistrations(bitcoind *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient, fromBlock uint64, toBlock uint64) []*addressRegistration {
+func getNewAddressRegistrations(bitcoind *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, fromBlock uint64, toBlock uint64) []*addressRegistration {
 
 	//Index of the block we are treating
 	var blockIndex uint64
 	//Hash of the bl0ock we are treating
 	var blockHash string
 	//Block we are treating
-	var block bitcoindwrapper.GetBlockResult
+	var block *bitcoindwrapper.GetBlockResult
 	//Slice with all the addresses we Find
 	var newAddressRegistrationList []*addressRegistration
 	//variables to hold info on new addresses

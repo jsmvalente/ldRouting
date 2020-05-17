@@ -14,8 +14,8 @@ import (
 	"syscall"
 
 	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 	. "github.com/jsmvalente/ldRouting/lnrlib"
-	"github.com/lightningnetwork/lnd/lnrpc"
 )
 
 func main() {
@@ -104,7 +104,7 @@ func main() {
 	optionMenu(lnClient, db)
 }
 
-func verifyLocalAddressRegistration(btcClient *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient, addressDB *DB) ([4]byte, bool) {
+func verifyLocalAddressRegistration(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, addressDB *DB) ([4]byte, bool) {
 
 	localNodePubKey := GetLocalNodePubKey(lnClient)
 	localAddress, valid := addressDB.GetNodeAddress(localNodePubKey)
@@ -121,7 +121,7 @@ func verifyLocalAddressRegistration(btcClient *bitcoindwrapper.Bitcoind, lnClien
 }
 
 //Address registration process
-func addressRegistrationMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient, addressDB *DB) [4]byte {
+func addressRegistrationMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, addressDB *DB) [4]byte {
 
 	type addressOption struct {
 		suggested [4]byte
@@ -218,7 +218,7 @@ func getValidAddressFromUser() [4]byte {
 }
 
 //Registers a new address and if the address to be registered is set to nil prompts the user for it
-func registerAddressMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient lnrpc.LightningClient) [4]byte {
+func registerAddressMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd) [4]byte {
 
 	//Check if we should prompt the address to the user
 	address := getValidAddressFromUser()
@@ -231,7 +231,7 @@ func registerAddressMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient lnrpc.Lig
 }
 
 // Present an option menu to the user
-func optionMenu(lnClient lnrpc.LightningClient, addressDB *DB) {
+func optionMenu(lnClient *lndwrapper.Lnd, addressDB *DB) {
 
 	//Present a menu to the User
 	for true {
