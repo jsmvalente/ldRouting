@@ -19,7 +19,16 @@ When Alice wants to find a path to Bob she sends a routing probe through the net
 
 The following instalation instructions are for running ldRouting using bitcoin's testnet.
 
-ldRouting uses the combination of [bitcoind](https://github.com/bitcoin/bitcoin) and [lnd](https://github.com/lightningnetwork/lnd) as backend implementations of the bitcoin and lightning protocols.
+In order to build ldRouting you'll need to download [Go](https://golang.org/dl/). The minimum version of Go supported is Go 1.14. We recommend that users use the latest version of Go, which at the time of writing is [`1.14`](https://blog.golang.org/go1.14).
+To build ldRouting run the following commands:
+
+```
+git clone https://github.com/jsmvalente/ldRouting
+cd ldRouting
+go install
+```
+
+ldRouting depends on [bitcoind](https://github.com/bitcoin/bitcoin) and [lnd](https://github.com/lightningnetwork/lnd) as backend implementations of the bitcoin and lightning protocols.
 
 The following is an example of a ```bitcoin.conf``` file that can be used to setup bitcoind for ldRouting.
 
@@ -59,12 +68,23 @@ bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 ```
 
 The LDR protocol uses the IP addresses announced by nodes in the lightning network to find its routes, so you for nodes to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
-Keep in mind that after setting one of those flags you'll need to restart lnd to regenerate your ```tls.cert```.
+After setting one of those configuration options you'll need to restart lnd to regenerate your ```tls.cert```.
+
+
 
 ## Usage
 
+To call ldRouting from anywhere you'll need to add its location to your ```$PATH``` enviroment variable:
+
 ```
-./ldRouting -<option>=<VALUE>
+export PATH=$PATH:$GOPATH/bin
+
+```
+ 
+Then you'll be able to start ldRouting using:
+
+```
+ldRouting -<option>=<VALUE>
 ```
 
 The available options are:
@@ -80,6 +100,12 @@ macaroonPath=<Path to the macaroon used with LND for authenticate> (default: $HO
 tlsCertPath=<Path to the TLS certificate used with LND for authentication> (default: $HOME/.lnd/tls.cert)
 port=<Port to listen for new connections to the routing client> (default: 8695)
 dataPath=<Path to directory holding the application's data> (default: $HOME/.ldRouting/data")
+```
+
+So normally you could start ldRouting by doing:
+
+```
+./ldRouting -bitcoinRPCUser=MY_RPC_USER -bitcoinRPCPassword=MY_RPC_PASS
 ```
 
 ## Contributing
