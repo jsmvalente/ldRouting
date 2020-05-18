@@ -13,13 +13,13 @@ The following animation illustrates how a route is computed using the LDR protoc
 
 ![Protocol Example GIF](protocol.gif)
 
-When Alice wants to find a path to Bob she sends a routing probe through the network. With the help of the routing tables kept locally by the nodes the probe collects the correct path and its associated data, being returned to its sender when it reaches its destiny. 
+When Alice wants to find a path to Bob she sends a routing probe through the network. With the help of the routing tables kept locally by the nodes the probe collects the correct path and its associated data. When the probe reaches the destination (Bob), it returns to the sender with the routing information. 
 
 ## Installation
 
 The following instalation instructions are for running ldRouting using bitcoin's testnet.
 
-In order to build ldRouting you'll need to download [Go](https://golang.org/dl/). The minimum version of Go supported is Go 1.14. We recommend that users use the latest version of Go, which at the time of writing is [`1.14`](https://blog.golang.org/go1.14).
+In order to build ldRouting you'll need to download [Go](https://golang.org/dl/). The minimum supported version is Go 1.14. We recommend using the latest version of Go, which at the time of writing is [`1.14`](https://blog.golang.org/go1.14).
 To build ldRouting run the following commands:
 
 ```
@@ -78,7 +78,6 @@ To call ldRouting from anywhere you'll need to add its location to your ```$PATH
 
 ```
 export PATH=$PATH:$GOPATH/bin
-
 ```
  
 Then you'll be able to start ldRouting using:
@@ -108,10 +107,10 @@ So normally you could start ldRouting by doing:
 ./ldRouting -bitcoinRPCUser=MY_RPC_USER -bitcoinRPCPassword=MY_RPC_PASS
 ```
 
-**Note**: This software is still highly unstable and not ready for production, to use it you need to know what you're doing.
+**Note**: This software is still highly unstable and not ready for production.
 
 ## Contributing
-Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+Pull requests are welcome. For major changes, please open an issue or a draft PR first to discuss what you would like to change.
 
 Please make sure to update tests as appropriate.
 
