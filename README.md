@@ -1,6 +1,6 @@
 # ldRouting
 
-ldRouting is the reference implementation of a lightning distributed routing node. It is written in [golang](https://golang.org/) and in it's current state, is capable of:
+ldRouting is the reference implementation of lightning distributed routing. The software is written in [golang](https://golang.org/) and in it's current state, is capable of:
 
 - [x] Find Routes between two public lighting nodes
 - [x] Register new LDR addresses
@@ -13,7 +13,7 @@ The following animation illustrates how a route is computed using the LDR protoc
 
 ![Protocol Example GIF](protocol.gif)
 
-When Alice wants to find a path to Bob she sends a routing probe through the network. With the help of the routing tables kept locally by the nodes the probe collects the correct path and its associated data. When the probe reaches the destination (Bob), it returns to the sender with the routing information. 
+When Alice wants to find a path to Bob she sends a routing probe through the network. With the help of the routing tables kept locally by the nodes the probe collects the correct path and its associated data. When the probe reaches the destination (Bob), it returns to the sender with the routing information.
 
 ## Installation
 
@@ -67,7 +67,7 @@ bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
 bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 ```
 
-The LDR protocol uses the IP addresses announced by nodes in the lightning network to connect to its peers, so to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
+In order to allow peer discovery the LDR protocol uses the IP addresses announced by the lightning network nodes, so to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
 After setting one of those configuration options you'll need to restart lnd to regenerate your ```tls.cert```.
 
 
