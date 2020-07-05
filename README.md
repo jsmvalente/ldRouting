@@ -1,6 +1,6 @@
 # ldRouting
 
-ldRouting is the reference implementation of lightning distributed routing. The software is written in [golang](https://golang.org/) and in it's current state, is capable of:
+ldRouting is the reference implementation of lightning distributed routing. The software is written in [golang](https://golang.org/) and in its current state it's capable of:
 
 - [x] Find Routes between two public lighting nodes
 - [x] Register new LDR addresses
