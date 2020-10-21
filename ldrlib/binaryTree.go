@@ -1,4 +1,4 @@
-package lndrlib
+package ldrlib
 
 type node struct {
 	data  interface{}

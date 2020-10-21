@@ -1,4 +1,4 @@
-package lndrlib
+package ldrlib
 
 import (
 	"crypto/aes"
