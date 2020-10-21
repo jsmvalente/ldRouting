@@ -52,8 +52,9 @@ lnd can also be configured by using the following ```lnd.conf``` file.
 
 ```
 [Application Options]
-tlsextraip=MY_IP_ADDRESS
-tlsextradomain=MY_DOMAIN
+externalip=MY_IP_ADDRESS
+# tlsextraip=MY_IP_ADDRESS
+# tlsextradomain=MY_DOMAIN
 
 [Bitcoin]
 bitcoin.active=true
@@ -67,8 +68,8 @@ bitcoind.zmqpubrawblock=tcp://127.0.0.1:28332
 bitcoind.zmqpubrawtx=tcp://127.0.0.1:28333
 ```
 
-The LDR protocol uses the IP addresses announced by nodes in the lightning network to connect to its peers, so to be able to route payments to your node you should need to set ```tlsextraip``` or ```tlsextradomain``` correctly.
-After setting one of those configuration options you'll need to restart lnd to regenerate your ```tls.cert```.
+The LDR protocol uses the IP addresses announced by nodes in the lightning network to connect to its peers, so to be able to route payments to your node you should need to set  ```externalip``` correctly.
+If you're connecting to remotely your lightning node remotely you will need to setup ```tlsextraip``` or ```tlsextradomain```. After setting one of those configuration options you'll need to restart lnd to regenerate your ```tls.cert```.
 
 
 

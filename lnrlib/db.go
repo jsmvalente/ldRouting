@@ -20,7 +20,7 @@ const (
 	addressInfoSerializedSize  int    = 81
 	routingEntrySerializedSize int    = 24
 	blockHeightSerializedSize  int    = 8
-	genesisBlock               uint64 = 1723139
+	genesisBlock               uint64 = 1863902
 	addressDBFileName          string = "address.db"
 	routingDBFileName          string = "routing.db"
 )
