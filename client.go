@@ -14,8 +14,8 @@ import (
 	"syscall"
 
 	"github.com/jsmvalente/ldRouting/bitcoindwrapper"
+	"github.com/jsmvalente/ldRouting/ldrlib"
 	"github.com/jsmvalente/ldRouting/lndwrapper"
-	. "github.com/jsmvalente/ldRouting/lnrlib"
 )
 
 func main() {
@@ -41,7 +41,7 @@ func main() {
 	flag.StringVar(&bitcoinRPCPassword, "bitcoinRPCPassword", "rpcPasswordExample", "Bitcoin core RPC password")
 	flag.StringVar(&lightningClientHost, "lightningClientHost", "localhost", "LND host address")
 	flag.StringVar(&lightningClientPortString, "lightningClientPort", "10009", "LND host port")
-	flag.StringVar(&port, "port", DefaultPort, "Port to listen for new connections to the client")
+	flag.StringVar(&port, "port", ldrlib.DefaultPort, "Port to listen for new connections to the client")
 	flag.StringVar(&macaroonPath, "macaroonPath", path.Join(os.Getenv("HOME"), ".lnd/data/chain/bitcoin/mainnet/admin.macaroon"), "Path to the macaroon used with LND for authenticate")
 	flag.StringVar(&tlsCertPath, "tlsCertPath", path.Join(os.Getenv("HOME"), ".lnd/tls.cert"), "Path to the TLS certificate used with LND for authentication")
 	flag.StringVar(&dataPath, "dataPath", path.Join(os.Getenv("HOME"), ".ldRouting/data"), "Path to directory holding the application's data")
@@ -57,20 +57,20 @@ func main() {
 	}
 
 	log.Println("Connecting to bitcoin client")
-	btcClient, err := ConnectToBitcoinClient(bitcoinClientHost, bitcoinClientPort, bitcoinRPCUser, bitcoinRPCPassword)
+	btcClient, err := ldrlib.ConnectToBitcoinClient(bitcoinClientHost, bitcoinClientPort, bitcoinRPCUser, bitcoinRPCPassword)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	log.Println("Connecting to lightning network client")
-	lnClient, err := ConnectToLNClient(lightningClientHost, lightningClientPort, macaroonPath, tlsCertPath)
+	lnClient, err := ldrlib.ConnectToLNClient(lightningClientHost, lightningClientPort, macaroonPath, tlsCertPath)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	//Read our address database into memory
 	log.Println("Reading addresses database")
-	db := ReadDBFromDisk(dataPath, lnClient)
+	db := ldrlib.ReadDBFromDisk(dataPath, lnClient)
 
 	// Update the database and start a subroutine to keep it keep up to database
 	db.UpdateAddressDB(btcClient, lnClient)
@@ -93,20 +93,20 @@ func main() {
 	//Tries to connect to LN peers that share a channel and are registered by using their
 	//lightning node public IP addresses
 	log.Println("Auto connecting to peers")
-	ConnectToPeersAuto(lnClient, db)
+	ldrlib.ConnectToPeersAuto(lnClient, db)
 
 	//Listen to new nodes that might want to connect with the client
 	log.Println("Listening for incoming connections...")
-	go ListenForConnections(lnClient, port, db)
+	go ldrlib.ListenForConnections(lnClient, port, db)
 
 	setupSigTermHandler(db)
 
 	optionMenu(lnClient, db)
 }
 
-func verifyLocalAddressRegistration(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, addressDB *DB) ([4]byte, bool) {
+func verifyLocalAddressRegistration(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, addressDB *ldrlib.DB) ([4]byte, bool) {
 
-	localNodePubKey := GetLocalNodePubKey(lnClient)
+	localNodePubKey := ldrlib.GetLocalNodePubKey(lnClient)
 	localAddress, valid := addressDB.GetNodeAddress(localNodePubKey)
 
 	// The local node already registered an address
@@ -121,7 +121,7 @@ func verifyLocalAddressRegistration(btcClient *bitcoindwrapper.Bitcoind, lnClien
 }
 
 //Address registration process
-func addressRegistrationMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, addressDB *DB) [4]byte {
+func addressRegistrationMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd, addressDB *ldrlib.DB) [4]byte {
 
 	type addressOption struct {
 		suggested [4]byte
@@ -130,7 +130,7 @@ func addressRegistrationMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndw
 
 	var addressOptions []addressOption
 
-	neighborsPubKey := GetLocalNodeNeighboursPubKeys(lnClient)
+	neighborsPubKey := ldrlib.GetLocalNodeNeighboursPubKeys(lnClient)
 
 	// Get one suggested address for each neighbor
 	for _, neighborPubKey := range neighborsPubKey {
@@ -174,7 +174,7 @@ func addressRegistrationMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndw
 			fmt.Println("You choose to register a non suggested address. This is not recommended.")
 			return registerAddressMenu(btcClient, lnClient)
 		} else {
-			hash, err := BroadcastNewAddressTx(btcClient, lnClient, addressOptions[userRegistrationOption].suggested)
+			hash, err := ldrlib.BroadcastNewAddressTx(btcClient, lnClient, addressOptions[userRegistrationOption].suggested)
 			if err != nil {
 				log.Fatal(err)
 			}
@@ -222,7 +222,7 @@ func registerAddressMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapp
 
 	//Check if we should prompt the address to the user
 	address := getValidAddressFromUser()
-	hash, err := BroadcastNewAddressTx(btcClient, lnClient, address)
+	hash, err := ldrlib.BroadcastNewAddressTx(btcClient, lnClient, address)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -231,7 +231,7 @@ func registerAddressMenu(btcClient *bitcoindwrapper.Bitcoind, lnClient *lndwrapp
 }
 
 // Present an option menu to the user
-func optionMenu(lnClient *lndwrapper.Lnd, addressDB *DB) {
+func optionMenu(lnClient *lndwrapper.Lnd, addressDB *ldrlib.DB) {
 
 	//Present a menu to the User
 	for true {
@@ -261,11 +261,11 @@ func optionMenu(lnClient *lndwrapper.Lnd, addressDB *DB) {
 
 			fmt.Println("Receiver's LDR address:")
 			address := getValidAddressFromUser()
-			route, err := GetRouteAuto(lnClient, addressDB, address)
+			route, err := ldrlib.GetRouteAuto(lnClient, addressDB, address)
 			if err != nil {
 				log.Fatal(err)
 			}
-			PrintRoute(route)
+			ldrlib.PrintRoute(route)
 		case 2:
 			fmt.Println("Receiver's LDR address:")
 			address := getValidAddressFromUser()
@@ -273,19 +273,19 @@ func optionMenu(lnClient *lndwrapper.Lnd, addressDB *DB) {
 			fmt.Println("PS: 8695 is the default port.")
 			readText, _ = reader.ReadString('\n')
 			ipAddress := strings.TrimSuffix(readText, "\n")
-			route, err := GetRouteManual(lnClient, addressDB, address, ipAddress)
+			route, err := ldrlib.GetRouteManual(lnClient, addressDB, address, ipAddress)
 			if err != nil {
 				log.Fatal(err)
 			}
 			fmt.Println("Got Route!")
-			PrintRoute(route)
+			ldrlib.PrintRoute(route)
 		case 3:
 			//Get an address from the user
 			fmt.Println("Enter the IP 'address:port' of the peer you're trying to connect to, e.g. '192.1.3.56:8695")
 			fmt.Println("PS: 8695 is the default port.")
 			readText, _ = reader.ReadString('\n')
 			address := strings.TrimSuffix(readText, "\n")
-			ConnectToPeer(lnClient, addressDB, address)
+			ldrlib.ConnectToPeer(lnClient, addressDB, address)
 		case 4:
 		case 5:
 			fmt.Println("Printing routing table")
@@ -297,7 +297,7 @@ func optionMenu(lnClient *lndwrapper.Lnd, addressDB *DB) {
 				fmt.Println(address, "is not a registered address")
 			} else {
 				pubKeyArray := addressDB.GetAddressNode(address)
-				fmt.Println(PubKeyArrayToString(pubKeyArray))
+				fmt.Println(ldrlib.PubKeyArrayToString(pubKeyArray))
 			}
 		case 0:
 			addressDB.SaveRoutingDBToFile()
@@ -314,7 +314,7 @@ func unlockWalletMenu(btcClient *bitcoindwrapper.Bitcoind) {
 		reader := bufio.NewReader(os.Stdin)
 		text, _ := reader.ReadString('\n')
 		passphrase := strings.TrimSuffix(text, "\n")
-		err := UnlockWallet(btcClient, passphrase)
+		err := ldrlib.UnlockWallet(btcClient, passphrase)
 		if err == nil {
 			break
 		} else {
@@ -323,7 +323,7 @@ func unlockWalletMenu(btcClient *bitcoindwrapper.Bitcoind) {
 	}
 }
 
-func setupSigTermHandler(db *DB) {
+func setupSigTermHandler(db *ldrlib.DB) {
 	c := make(chan os.Signal)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {

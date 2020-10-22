@@ -4,6 +4,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"log"
+
+	"github.com/jsmvalente/ldRouting/lndwrapper"
 )
 
 const (
@@ -144,7 +146,7 @@ func processTableRequest(db *DB, request []byte) ([]byte, error) {
 }
 
 //Processes the response of a previously made table request
-func processTableResponse(response []byte, db *DB, peerPubKey [33]byte) error {
+func processTableResponse(response []byte, db *DB, peerPubKey [33]byte, lnClient *lndwrapper.Lnd) error {
 
 	var dest *destination
 	var serializedDest []byte
@@ -172,7 +174,7 @@ func processTableResponse(response []byte, db *DB, peerPubKey [33]byte) error {
 		serializedDest = response[4+n*destinationSize : 4+(n+1)*destinationSize]
 		dest = deserializeDestination(serializedDest)
 		log.Println("Adding destination to DB:", dest)
-		db.addNewDestinationToDB(dest, peerPubKey)
+		db.addNewDestinationToDB(dest, peerPubKey, lnClient)
 	}
 
 	return nil

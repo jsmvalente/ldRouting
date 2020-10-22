@@ -522,7 +522,7 @@ func handlePeerConnection(conn net.Conn, lnClient *lndwrapper.Lnd, db *DB, sessi
 
 		} else if messageType == tableResponseType {
 			log.Println("New Table Response")
-			err = processTableResponse(message, db, peerPubKey)
+			err = processTableResponse(message, db, peerPubKey, lnClient)
 			if err != nil {
 				log.Println(err)
 				return
@@ -536,6 +536,7 @@ func handlePeerConnection(conn net.Conn, lnClient *lndwrapper.Lnd, db *DB, sessi
 			}
 
 			if route.destination == db.getLocalAddress() {
+				log.Println("Destination is local node. Sending route to sender.")
 				sendRouteToSender(db, route)
 			} else {
 				//Add the first hop to the route and send forward the request through the network
@@ -617,6 +618,6 @@ func sendTableRequestPeriodically(db *DB, address [4]byte) {
 		connInfo.mutex.Unlock()
 
 		//WAit 10 minutes before sending the next table request
-		time.Sleep(10 * time.Minute)
+		time.Sleep(5 * time.Minute)
 	}
 }

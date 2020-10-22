@@ -20,7 +20,7 @@ const (
 	addressInfoSerializedSize  int    = 81
 	routingEntrySerializedSize int    = 24
 	blockHeightSerializedSize  int    = 8
-	genesisBlock               uint64 = 1863902
+	genesisBlock               uint64 = 0
 	addressDBFileName          string = "address.db"
 	routingDBFileName          string = "routing.db"
 )
@@ -639,7 +639,7 @@ func (db *DB) getLastRoutingEntries(fromBlock uint64) []*routingEntry {
 }
 
 //Adds a new destination (shared by a peer) to the DB if it's better than the entry we have stored
-func (db *DB) addNewDestinationToDB(destination *destination, neighbourPubKey [33]byte) {
+func (db *DB) addNewDestinationToDB(destination *destination, neighbourPubKey [33]byte, lnClient *lndwrapper.Lnd) {
 
 	//If we are trying to add information about ourselves, skip
 	if destination.address == db.getLocalAddress() {
@@ -654,7 +654,19 @@ func (db *DB) addNewDestinationToDB(destination *destination, neighbourPubKey [3
 	newEntry := &routingEntry{destination: destination.address, nextHop: peerAddress,
 		capacity: destination.capacity, height: blockHeight}
 
-	//Get the existing routing entry for his destination
+	//Limit the new enrty capacities to the channel capacity
+	localChannels := GetLocalChannels(lnClient)
+	neighbourPubKeyString := PubKeyArrayToString(neighbourPubKey)
+	for _, localChannel := range localChannels {
+		//Found the channel shared with the next hop neighbour
+		if localChannel.RemotePubkey == neighbourPubKeyString {
+			if localChannel.LocalBalance < newEntry.capacity {
+				newEntry.capacity = localChannel.LocalBalance
+			}
+		}
+	}
+
+	//Get the existing routing entry for this destination
 	entry := db.getRoutingEntry(destination.address)
 
 	//If there is no entry for this destination we just add a new one
@@ -796,41 +808,49 @@ func (db *DB) SynchronizeAddressDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnCl
 //SynchronizeRoutingDB updates the routing DB according to changes in the local channel balances
 func (db *DB) SynchronizeRoutingDB(bitcoinCLient *bitcoindwrapper.Bitcoind, lnClient *lndwrapper.Lnd) {
 
-	var capacity int64
 	var registered bool
-	var destinationPubKey [33]byte
-	var destinationAddress [4]byte
-	var height uint64
-	var err error
+	var neighbourPubKey [33]byte
+	var neighbourAddress [4]byte
 	var localChannels []*lnrpc.Channel
 
 	for {
 
-		//Get the number of blocks in the chain
-		height, err = GetBlockCount(bitcoinCLient)
-		if err != nil {
-			log.Fatal("Error getting block count:" + err.Error())
-		}
-
 		//Get the local channels
 		localChannels = GetLocalChannels(lnClient)
+
+		//Get all the routing entries
+		routingEntries := db.routingEntriesStack.peekFromBlock(genesisBlock)
 
 		//Iterate thourgh all the active channels of this node
 		//Add routing entries for neighbours that are registered in the protocol
 		for _, localChannel := range localChannels {
 
-			destinationPubKey = PubKeyStringToArray(localChannel.RemotePubkey)
-			destinationAddress, registered = db.GetNodeAddress(destinationPubKey)
+			neighbourPubKey = PubKeyStringToArray(localChannel.RemotePubkey)
+			neighbourAddress, registered = db.GetNodeAddress(neighbourPubKey)
 
-			if registered {
-				capacity = localChannel.LocalBalance
-
-				db.addRoutingEntryToDB(&routingEntry{destination: destinationAddress, nextHop: destinationAddress, capacity: capacity, height: height})
+			//IF the channel is not registered we an skip it
+			if !registered {
+				continue
 			}
+
+			//Update routing entries whose next hop is the other end of this channel
+			for n, routingEntry := range routingEntries {
+				if routingEntry.nextHop == neighbourAddress && routingEntry.capacity > localChannel.LocalBalance {
+					fmt.Println("Updated Entry #:", n)
+					fmt.Println("Destination:", net.IP(routingEntry.destination[:]).String())
+					fmt.Println("Next Hop:", net.IP(routingEntry.nextHop[:]).String())
+					fmt.Println("Old Capacity:", routingEntry.capacity)
+					fmt.Println("New Capacity:", localChannel.LocalBalance)
+					routingEntry.capacity = localChannel.LocalBalance
+				}
+			}
+
+			//Add destination to DB
+			db.addNewDestinationToDB(&destination{address: neighbourAddress, capacity: localChannel.LocalBalance}, neighbourPubKey, lnClient)
 		}
 
-		//Update routing DB every 10 minutes
-		time.Sleep(10 * time.Minute)
+		//Update routing DB every minute
+		time.Sleep(time.Minute)
 	}
 }
 
