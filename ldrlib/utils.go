@@ -204,11 +204,6 @@ func serializeRoute(route *Route) []byte {
 
 	var serializedRoute []byte
 
-	//Start building the header, first with the number of hops (2 bytes)
-	numberHopsBytes := make([]byte, 2)
-	binary.LittleEndian.PutUint16(numberHopsBytes, uint16(len(route.hops)))
-	serializedRoute = append(serializedRoute, numberHopsBytes...)
-
 	//Add the destination to the header (4 bytes)
 	serializedRoute = append(serializedRoute, route.destination[:]...)
 
@@ -219,6 +214,11 @@ func serializeRoute(route *Route) []byte {
 	capacityBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(capacityBytes, uint64(route.capacity))
 	serializedRoute = append(serializedRoute, capacityBytes...)
+
+	//Add number of hops to the header(2 bytes)
+	numberHopsBytes := make([]byte, 2)
+	binary.LittleEndian.PutUint16(numberHopsBytes, uint16(len(route.hops)))
+	serializedRoute = append(serializedRoute, numberHopsBytes...)
 
 	for i := 0; i < len(route.hops); i++ {
 		serializedRoute = append(serializedRoute, route.hops[i][:]...)
@@ -232,10 +232,10 @@ func deserializeRoute(routeBytes []byte) *Route {
 	route := &Route{}
 	var hop [4]byte
 
-	numberHops := binary.LittleEndian.Uint16(routeBytes[0:2])
-	copy(route.destination[:], routeBytes[2:6])
-	route.token = string(routeBytes[6:16])
-	route.capacity = int64(binary.LittleEndian.Uint64(routeBytes[16:24]))
+	copy(route.destination[:], routeBytes[0:4])
+	route.token = string(routeBytes[4:14])
+	route.capacity = int64(binary.LittleEndian.Uint64(routeBytes[14:22]))
+	numberHops := binary.LittleEndian.Uint16(routeBytes[22:24])
 
 	log.Println("# hops:", numberHops)
 

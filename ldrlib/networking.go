@@ -69,22 +69,26 @@ func closeDestConnection(db *DB, token string) {
 //ReceiveRouteFromDestination waits on a connection
 func ReceiveRouteFromDestination(db *DB, token string) *Route {
 
-	//Read the number of hops
-	numberHopsBytes := make([]byte, 2)
-	_, err := db.getDestConn(token).conn.Read(numberHopsBytes)
+	//Read the first part of the header
+	headerBytes := make([]byte, 4+10+8)
+	_, err := db.getDestConn(token).conn.Read(headerBytes)
 	if err != nil {
 		log.Println(err)
 	}
+
+	//Read the number of hops
+	numberHopsBytes := make([]byte, 2)
 	numberHops := binary.LittleEndian.Uint16(numberHopsBytes)
 
 	//Read the rest of the route
-	restRouteBytes := make([]byte, 4+10+8+numberHops*4)
-	_, err = db.getDestConn(token).conn.Read(restRouteBytes)
+	hopsBytes := make([]byte, numberHops*4)
+	_, err = db.getDestConn(token).conn.Read(hopsBytes)
 	if err != nil {
 		log.Println(err)
 	}
 
-	routeBytes := append(numberHopsBytes, restRouteBytes...)
+	routeBytes := append(headerBytes, numberHopsBytes...)
+	routeBytes = append(routeBytes, hopsBytes...)
 
 	closeDestConnection(db, token)
 
@@ -343,21 +347,21 @@ func offerPeerHandshake(conn net.Conn, client *lndwrapper.Lnd, addressDB *DB) ([
 	}
 
 	//The peer sends back the AES Key as an ACK
-	log.Println("Reading AES encrypted Key from peer")
-	encryptedAESKeyMessage := make([]byte, RSAEncryptionSize)
-	_, err = conn.Read(encryptedAESKeyMessage)
+	log.Println("Reading AES encrypted Info from peer")
+	encryptedAESInfoMessage := make([]byte, RSAEncryptionSize)
+	_, err = conn.Read(encryptedAESInfoMessage)
 	if err != nil {
 		log.Println(err)
 	}
 
 	log.Println("Decrypting AES key with RSA privkey.")
-	aesKeyMessage := decryptRSA(privKey, encryptedAESKeyMessage)
+	aesInfoMessage := decryptRSA(privKey, encryptedAESInfoMessage)
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Decrypted:", aesKeyMessage)
-	log.Println("Should be:", aesKey)
-	if bytes.Compare(aesKey, aesKeyMessage) != 0 {
+	log.Println("Decrypted:", aesInfoMessage)
+	log.Println("Should be:", aesInfo)
+	if bytes.Compare(aesInfo, aesInfoMessage) != 0 {
 		log.Fatal("Error reading AES ACK from peer")
 	}
 
@@ -510,7 +514,7 @@ func handlePeerConnection(conn net.Conn, lnClient *lndwrapper.Lnd, db *DB, sessi
 		messageTypeBytes = message[:2]
 		messageType = binary.BigEndian.Uint16(messageTypeBytes)
 
-		//Act accordingt to the type of message
+		//Act according to the type of message
 		//Requests will generate responses and responses will be processed
 		if messageType == tableRequestType {
 			log.Println("New Table Request")
