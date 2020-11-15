@@ -5,7 +5,6 @@ ldRouting is the reference implementation of lightning distributed routing. The 
 - [x] Find Routes between two public lighting nodes
 - [x] Register new LDR addresses
 - [x] Share routing tables between peer nodes
-- [ ] Find Routes to and/or from private lighting nodes
 - [ ] Group routing addresses and use prefixing to work with zones
 - [ ] Virtual Private Payment Networks (VPPN), the VPN equivalent of LDR
 
