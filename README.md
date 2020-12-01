@@ -107,7 +107,7 @@ So normally you could start ldRouting by doing:
 ./ldRouting -bitcoinRPCUser=MY_RPC_USER -bitcoinRPCPassword=MY_RPC_PASS
 ```
 
-**Note**: This software is still highly unstable and not ready for production.
+**Note**: This software is still highly unstable and not ready for production. A bitcoind regtest environment is recommended.
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue or a draft PR first to discuss what you would like to change.
